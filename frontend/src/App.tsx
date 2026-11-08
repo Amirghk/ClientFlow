@@ -199,7 +199,7 @@ function Landing() {
             </section>
             <footer>
                 <span>
-                    ClientFlow · An independently developed portfolio product
+                    ClientFlow · Client relationships, from first contact to delivery.
                 </span>
                 <span>Built for small teams with big plans.</span>
             </footer>
@@ -448,7 +448,7 @@ export function Workspace({ demo = false }: { demo?: boolean }) {
                         </div>
                         <div className="row">
                             <span className="connection-dot" />
-                            {demo ? "Portfolio preview" : "Your team workspace"}
+                            {demo ? "Demo workspace" : "Your team workspace"}
                             <span className="top-avatar">
                                 {session.profile.displayName[0]}
                             </span>

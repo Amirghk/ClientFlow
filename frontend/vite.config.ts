@@ -7,6 +7,12 @@ export default defineConfig({
         alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
     },
     plugins: [react(), tailwindcss()],
+    server: {
+        watch: { usePolling: process.env.VITE_USE_POLLING === "true" },
+        proxy: {
+            "/api": { target: process.env.API_PROXY_TARGET || "http://localhost:5080", changeOrigin: true },
+        },
+    },
     test: {
         environment: "jsdom",
         setupFiles: "./src/test/setup.ts",

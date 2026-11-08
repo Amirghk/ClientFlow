@@ -1,0 +1,36 @@
+# Optional local source watchers. Use together with docker-compose.yml.
+services:
+  api:
+    build:
+      target: development
+    volumes:
+      - ./backend:/src/backend
+      # Keep Linux build outputs separate from Windows host builds.
+      - /src/backend/ClientFlow.Api/bin
+      - /src/backend/ClientFlow.Api/obj
+      - /src/backend/ClientFlow.Application/bin
+      - /src/backend/ClientFlow.Application/obj
+      - /src/backend/ClientFlow.Common/bin
+      - /src/backend/ClientFlow.Common/obj
+      - /src/backend/ClientFlow.Domain/bin
+      - /src/backend/ClientFlow.Domain/obj
+      - /src/backend/ClientFlow.Infrastructure/bin
+      - /src/backend/ClientFlow.Infrastructure/obj
+    healthcheck:
+      start_period: 60s
+  frontend:
+    build:
+      target: development
+    environment:
+      VITE_API_URL: ""
+      VITE_AUTH0_DOMAIN: ${AUTH0_DOMAIN:-}
+      VITE_AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID:-}
+      VITE_AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
+      API_PROXY_TARGET: http://api:8080
+      VITE_USE_POLLING: "true"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html:ro
+      - ./frontend/vite.config.ts:/app/vite.config.ts:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]

@@ -1,6 +1,6 @@
 # Auth0 configuration
 
-All checked-in Auth0 values remain blank. No tenant or paid service has been created.
+Auth0 settings are supplied through local configuration or environment variables. Checked-in examples contain no tenant-specific values.
 
 1. Create/use a free Auth0 tenant. Register an API with an Identifier of your choice and RS256 signing.
 2. Set the backend `Auth0:Domain` to the tenant hostname (without `https://`) and `Auth0:Audience` to that exact Identifier. The backend needs no client secret.
@@ -17,6 +17,10 @@ The Auth0 React SDK uses Authorization Code with PKCE. Tokens are kept in its de
 
 ClientFlow organizations and Admin/Member roles live in PostgreSQL. A verified Auth0 `sub` is the identity key under the configured issuer. The editable display name is presentation data and never grants permissions. Switching issuers/tenants requires a deliberate identity migration.
 
-For another local port or deployed origin, update callback/logout/web-origin values, frontend build configuration, and backend CORS together. Use HTTPS for hosted environments. No production deployment has been performed.
+For another local port or deployed origin, update callback/logout/web-origin values, frontend build configuration, and backend CORS together. Use HTTPS for hosted environments.
 
 References: [Auth0 React SDK](https://auth0.com/docs/libraries/auth0-react), [API access tokens](https://auth0.com/docs/secure/tokens/access-tokens/get-access-tokens), [Auth0 pricing](https://auth0.com/pricing). Verify current free-tier quotas in your tenant before deployment.
+
+## Docker Compose
+
+The container stack reads AUTH0_DOMAIN, AUTH0_CLIENT_ID, and AUTH0_AUDIENCE from the repository-root .env. These correspond to the frontend VITE_AUTH0 settings and backend Auth0 settings above. The default frontend URL and callback are unchanged. Rebuild the frontend image after changing Auth0 values. frontend/.env.local is excluded from Docker builds.

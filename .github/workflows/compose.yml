@@ -1,0 +1,39 @@
+name: Compose smoke test
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  containers:
+    runs-on: ubuntu-latest
+    env:
+      COMPOSE_PROJECT_NAME: clientflow-ci
+      POSTGRES_PASSWORD: ci-disposable-database
+      AUTH0_DOMAIN: clientflow-smoke.auth0.com
+      AUTH0_CLIENT_ID: ci-smoke-client
+      AUTH0_AUDIENCE: https://clientflow-smoke.test/api
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose configurations
+        run: |
+          docker compose --profile tools config --quiet
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile tools config --quiet
+      - name: Start isolated stack with database browser
+        run: docker compose --profile tools up --build -d --wait --wait-timeout 180
+      - name: Check readiness, SPA routes, proxy authorization, and browser
+        run: |
+          curl --fail http://localhost:5080/health/ready
+          curl --fail http://localhost:5173/demo
+          curl --fail http://localhost:5173/app/example/projects
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/api/me)" = "401"
+          curl --fail http://localhost:8081/
+      - name: Verify migrations are idempotent
+        run: docker compose run --rm migrate
+      - name: Logs
+        if: always()
+        run: docker compose --profile tools logs --no-color
+      - name: Remove disposable CI stack
+        if: always()
+        run: docker compose --profile tools down --volumes --remove-orphans

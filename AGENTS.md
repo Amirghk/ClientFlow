@@ -14,7 +14,7 @@
 ## Configuration and persistence
 
 - Map application configuration to typed settings classes, each with a `SectionName` constant. Bind and validate options at startup.
-- Keep Auth0 values empty in checked-in configuration until the user supplies values. Never introduce an authentication bypass.
+- Keep tenant-specific Auth0 values out of checked-in configuration; supply them through environment variables or local settings. Never introduce an authentication bypass.
 - Define database index names in Common constants and use them in EF mappings and provider error handling. Treat constants used by historical migrations as immutable.
 - Keep authenticated organization membership checks at server boundaries. Never trust caller-supplied roles or organization IDs as authorization.
 

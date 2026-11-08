@@ -15,7 +15,7 @@ export async function apiRequest<T>(
     body?: unknown,
 ): Promise<T> {
     const response = await fetch(
-        `${(import.meta.env.VITE_API_URL || "http://localhost:5080").replace(/\/$/, "")}${path}`,
+        `${(import.meta.env.VITE_API_URL ?? "http://localhost:5080").replace(/\/$/, "")}${path}`,
         {
             method,
             headers: {

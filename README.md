@@ -1,6 +1,73 @@
 # ClientFlow
 
-A local MVP for small teams: organization → companies and contacts → opportunities → projects and tasks → reporting. The .NET 10 API uses PostgreSQL and Auth0; the React workspace lives beside it in `frontend/`.
+ClientFlow is a multi-tenant CRM and project management application for small teams. It connects client relationships, sales opportunities, and project delivery in one workspace.
+
+![ClientFlow workspace](docs/demo-preview.png)
+
+## Features
+
+- Company and contact management with search, pagination, and archive/restore.
+- Sales pipeline with table and Kanban views, accessible stage selection, and won-deal conversion.
+- Projects and tasks with assignments, priorities, due dates, and progress tracking.
+- Reporting with currency-specific totals and a transactional activity feed.
+- Organization roles, single-use invitations, and protection against removing the last administrator.
+- An isolated read-only demo with sample data, available without external services.
+
+## Technology
+
+| Area | Stack |
+| --- | --- |
+| Backend | .NET 10, ASP.NET Core controllers, EF Core, PostgreSQL |
+| Frontend | React, TypeScript, Vite, React Router, Tailwind CSS, Radix/shadcn-style components |
+| Authentication | Auth0 Universal Login and JWT bearer validation |
+| Data fetching | TanStack Query with tenant-scoped caching and optimistic updates |
+| Testing | xUnit, HTTP integration tests, Vitest, Playwright |
+| Operations | Docker Compose, GitHub Actions, optional OpenTelemetry |
+
+## Run with Docker Compose
+
+Docker Desktop (Linux containers) and Docker Compose are sufficient; host installations of Node.js and .NET are not required.
+
+1. Copy `.env.example` to `.env` if it does not already exist.
+2. Set `POSTGRES_PASSWORD`, `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, and `AUTH0_AUDIENCE`. See [Auth0 setup](docs/auth0-setup.md) for the API and SPA registration.
+3. Start the stack:
+
+```powershell
+docker compose up --build -d --wait
+```
+
+Open **http://localhost:5173/app**, or **http://localhost:5173/demo** for sample data. The API is also available at `http://localhost:5080`. Compose starts PostgreSQL, applies EF migrations through a one-shot service, waits for API readiness, and serves the React production build through Nginx. Frontend `/api` requests are proxied to the API on the internal Docker network. All published ports bind to localhost.
+
+The stack is configured for local HTTP development. Auth0 remains an external service; blank or invalid settings do not enable an authentication bypass. Configure the SPA callback as `http://localhost:5173/app`, and logout/web origins as `http://localhost:5173`. If `FRONTEND_PORT` changes, update these URLs in Auth0 as well. The production frontend embeds its public Auth0 settings at build time: rerun `docker compose up --build -d --wait` after changing them. Docker does not load `frontend/.env.local` into images; Compose reads the root `.env`.
+
+### Optional database browser
+
+```powershell
+docker compose --profile tools up --build -d --wait
+```
+
+Open **http://localhost:8081** for Adminer. Choose **PostgreSQL**, use server **postgres**, and enter `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` from `.env`. The default user/database are `clientflow`. No separate Adminer account is required. A prefilled link for those defaults is `http://localhost:8081/?pgsql=postgres&username=clientflow&db=clientflow`.
+
+To add only the browser to a running stack: `docker compose up -d adminer`. To stop it: `docker compose stop adminer`. The optional service is excluded from normal startup.
+
+### Optional hot reload
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile tools up --build -d --wait
+```
+
+This runs `dotnet watch` and Vite against mounted source files at the same ports. Linux backend build outputs are isolated from host build outputs. Rebuild after dependency changes. New EF migrations require rebuilding/restarting the migration service; the watch process does not apply schema changes itself.
+
+### Logs and shutdown
+
+```powershell
+docker compose logs -f api frontend migrate
+docker compose --profile tools down
+```
+
+Normal shutdown preserves the `postgres-data` volume. Removing that volume deletes the local database. Changing `POSTGRES_PASSWORD` in `.env` does not change the password of an already initialized PostgreSQL volume; use its existing credentials or deliberately update the database role.
+
+For database-only support while running the API/frontend on the host, use `docker compose up -d --wait postgres`.
 
 ## Explore without configuration
 
@@ -12,9 +79,9 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5173/demo`. This is a visibly read-only workspace with deterministic fictional data and the same presentation components as the authenticated product. It never calls the backend. `/app` explains setup when Auth0 values are missing. Normal screens never fall back to sample data.
+Open `http://localhost:5173/demo`. This is a read-only workspace with deterministic fictional data and the same presentation components as the authenticated product. It never calls the backend. `/app` displays a sign-in availability message when authentication is not configured. Normal screens never fall back to sample data.
 
-## Connect the real workspace
+## Run the API and frontend on the host
 
 From the repository root, with .NET SDK 10 installed:
 
@@ -23,7 +90,7 @@ dotnet restore ClientFlow.slnx --locked-mode
 dotnet tool restore
 Copy-Item .env.example .env
 # Edit .env with a local PostgreSQL password.
-docker compose up -d --wait
+docker compose up -d --wait postgres
 $env:ConnectionStrings__ClientFlow = 'Host=localhost;Port=5432;Database=clientflow;Username=clientflow;Password=YOUR_LOCAL_PASSWORD'
 dotnet ef database update --project backend/ClientFlow.Infrastructure
 ```
@@ -89,14 +156,16 @@ Remove-Item Env:CLIENTFLOW_TEST_POSTGRES
 
 Use a test account permitted to create databases. Tests create/migrate a random `clientflow_tests_*` database and remove that database afterward; they do not clear your configured application database. PostgreSQL-only tests verify migrations, conversion uniqueness, stale administrator changes, and competing invitation consumption. These are explicitly skipped without this variable. SQLite results do not establish PostgreSQL compatibility.
 
-Browser tests include real demo navigation and a separate **simulated API** test entry under `frontend/tests/`; they are not live Auth0/full-stack verification. This entry is excluded from production output. CI runs backend builds, SQLite tests, PostgreSQL tests, frontend builds/component tests, and Chromium browser tests. CI execution itself requires pushing to GitHub.
+Browser tests include real demo navigation and a separate **simulated API** test entry under `frontend/tests/`; they are not live Auth0/full-stack verification. This entry is excluded from production output. CI runs backend builds, SQLite tests, PostgreSQL tests, frontend builds/component tests, and Chromium browser tests. See the workflow runs in GitHub Actions for CI results.
 
-See [review checklist and verification record](docs/review-checklist.md) for what was actually executed and what requires your connections.
+See the [testing guide](docs/verification.md) and [manual acceptance checklist](docs/review-checklist.md) for test coverage and environment requirements.
 
 ## Architecture and API
 
-The backend preserves API, Common, Application, Infrastructure, and Domain projects, controller endpoints, typed configuration, shared index constants, and registration extensions. Application coordinates use cases through interfaces; Domain owns invariants; Infrastructure owns EF mappings and transactions. See [MVP architecture](docs/mvp-architecture.md) and [API contract](docs/api.md). Development OpenAPI is available at `/openapi/v1.json`.
+The backend is organized into API, Common, Application, Infrastructure, and Domain projects, controller endpoints, typed configuration, shared index constants, and registration extensions. Application coordinates use cases through interfaces; Domain owns invariants; Infrastructure owns EF mappings and transactions. See [MVP architecture](docs/mvp-architecture.md) and [API contract](docs/api.md). Development OpenAPI is available at `/openapi/v1.json`.
 
 Important changes and their activity records commit together. `X-Correlation-ID` and Problem Details trace IDs support troubleshooting. Structured request logs exclude tokens, request bodies, and query strings. Optional OpenTelemetry uses `Telemetry:Enabled`, `ServiceName`, and `OtlpEndpoint`; it is disabled by default. Keep EF sensitive-data logging disabled.
 
-This is a local review deliverable. No accounts, subscriptions, or deployments have been created. Auth0/PostgreSQL connectivity must be verified with your configuration. Payments, email automation, uploads, chat, AI, exchange-rate conversion, and mobile apps are outside scope.
+## Scope
+
+The application focuses on CRM, sales, and project delivery. Payments, email automation, uploads, chat, AI features, exchange-rate conversion, and native mobile applications are outside its current scope. Hosting and external service provisioning are environment-specific.

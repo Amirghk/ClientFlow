@@ -624,7 +624,7 @@ export function ResourcePage({
                         <p>{editor !== true && editor.description}</p>
                         <p className="muted">
                             {session.demo
-                                ? "The portfolio demo is read-only."
+                                ? "This demo is read-only."
                                 : "Restore this task before editing it."}
                         </p>
                     </Modal>

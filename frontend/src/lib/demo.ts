@@ -349,7 +349,7 @@ export const demoDashboard: DashboardData = {
     ],
 };
 export async function demoRequest<T>(path: string, method = "GET"): Promise<T> {
-    if (method !== "GET") throw new Error("The portfolio demo is read-only.");
+    if (method !== "GET") throw new Error("This demo is read-only.");
     const url = new URL(path, "http://demo.local");
     const parts = url.pathname.split("/").filter(Boolean);
     if (url.pathname === "/api/organizations")

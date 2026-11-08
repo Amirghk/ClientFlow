@@ -62,22 +62,10 @@ export function ConfiguredSession({ children }: { children: ReactNode }) {
                 </Link>
                 <div className="panel setup-panel">
                     <span className="eyebrow">YOUR WORKSPACE</span>
-                    <h1>A few details, then you’re in.</h1>
+                    <h1>Sign-in is not available yet.</h1>
                     <p>
-                        Connect your Auth0 tenant to start using your own
-                        workspace. The portfolio demo is ready to explore now.
-                    </p>
-                    <div className="setup-code">
-                        VITE_AUTH0_DOMAIN
-                        <br />
-                        VITE_AUTH0_CLIENT_ID
-                        <br />
-                        VITE_AUTH0_AUDIENCE
-                    </div>
-                    <p className="muted">
-                        Set these in frontend/.env.local and restart the
-                        frontend. Backend configuration is documented in the
-                        project README.
+                        Authentication is not configured for this instance.
+                        Explore the read-only demo to see ClientFlow in action.
                     </p>
                     <Button asChild>
                         <Link to="/demo">Explore the demo →</Link>

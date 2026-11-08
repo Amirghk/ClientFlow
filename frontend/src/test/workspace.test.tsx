@@ -144,7 +144,7 @@ describe("workspace presentation with simulated API responses", () => {
             </QueryClientProvider>,
         );
         expect(
-            await screen.findByText("A few details, then you’re in."),
+            await screen.findByText("Sign-in is not available yet."),
         ).toBeVisible();
         expect(
             screen.queryByText("Good things are taking shape."),
