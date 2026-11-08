@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../ClientFlow.Domain/ClientFlow.Domain.csproj" />
+    <ProjectReference Include="../ClientFlow.Common/ClientFlow.Common.csproj" />
+  </ItemGroup>
+</Project>

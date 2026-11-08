@@ -1,0 +1,36 @@
+@baseUrl = http://localhost:5080
+# Paste a short-lived USER access token locally; do not commit it.
+@accessToken = REPLACE_LOCALLY
+@organizationId = 00000000-0000-0000-0000-000000000000
+
+### Liveness
+GET {{baseUrl}}/health/live
+
+### Database readiness
+GET {{baseUrl}}/health/ready
+
+### Current identity
+GET {{baseUrl}}/api/me
+Authorization: Bearer {{accessToken}}
+
+### Create organization; creator becomes Admin
+POST {{baseUrl}}/api/organizations
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{ "name": "My agency" }
+
+### My organizations (stable name/id ordering)
+GET {{baseUrl}}/api/organizations?page=1&pageSize=20
+Authorization: Bearer {{accessToken}}
+
+### Selected organization
+GET {{baseUrl}}/api/organizations/{{organizationId}}
+Authorization: Bearer {{accessToken}}
+
+### Rename (Admin only)
+PUT {{baseUrl}}/api/organizations/{{organizationId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{ "name": "Renamed agency" }

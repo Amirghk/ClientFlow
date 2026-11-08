@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/TestResults/
+.vs/
+.idea/
+.env
+*.user
+**/appsettings.Local.json
+artifacts/
+
+**/node_modules/
+**/dist/
+**/.env.local
+**/test-results/
+**/playwright-report/
+*.tsbuildinfo
